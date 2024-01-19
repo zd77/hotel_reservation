@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -20,6 +21,11 @@ type CreateUserParams struct {
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
+}
+
+type UpdateUserParams struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
 }
 
 type User struct {
@@ -43,19 +49,19 @@ func NewUserFromParams(params CreateUserParams) (*User, error) {
 	}, nil
 }
 
-func (params CreateUserParams) Validate() []string {
-	errors := []string{}
+func (params CreateUserParams) Validate() map[string]string {
+	errors := map[string]string{}
 	if len(params.FirstName) < minFirstNameLen {
-		errors = append(errors, fmt.Sprintf("firstname lenght should be at least %d characters", minFirstNameLen))
+		errors["firstName"] = fmt.Sprintf("firstname lenght should be at least %d characters", minFirstNameLen)
 	}
 	if len(params.LastName) < minLastNameLen {
-		errors = append(errors, fmt.Sprintf("lastname lenght should be at least %d characters", minLastNameLen))
+		errors["lastName"] = fmt.Sprintf("lastname lenght should be at least %d characters", minLastNameLen)
 	}
 	if len(params.Password) < minPasswordLen {
-		errors = append(errors, fmt.Sprintf("password lenght should be at least %d characters", minPasswordLen))
+		errors["password"] = fmt.Sprintf("password lenght should be at least %d characters", minPasswordLen)
 	}
 	if !isEmailValid(params.Email) {
-		errors = append(errors, fmt.Sprintln("email is invalid"))
+		errors["email"] = fmt.Sprintln("email is invalid")
 	}
 	return errors
 }
@@ -63,4 +69,15 @@ func (params CreateUserParams) Validate() []string {
 func isEmailValid(e string) bool {
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return emailRegex.MatchString(e)
+}
+
+func (p *UpdateUserParams) ToBson() bson.M {
+	m := bson.M{}
+	if len(p.FirstName) > 0 {
+		m["firsName"] = p.FirstName
+	}
+	if len(p.LastName) > 0 {
+		m["lastName"] = p.LastName
+	}
+	return m
 }
