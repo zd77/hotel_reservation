@@ -36,18 +36,20 @@ func main() {
 		roomStore    = db.NewMongoRoomStore(client, hotelStore)
 		userStore    = db.NewMongoUserStore(client)
 		bookingStore = db.NewMongoBookingStore(client)
-		store        = db.Store{
+		store        = &db.Store{
 			Hotel:   hotelStore,
 			Room:    roomStore,
 			User:    userStore,
 			Booking: bookingStore,
 		}
-		hotelHandler = api.NewHotelHandler(&store)
-		userHandler  = api.NewUserHandler(userStore)
-		authHandler  = api.NewAuthHandler(userStore)
-		roomHandler  = api.NewRoomHandler(&store)
-		apiv1        = app.Group("api/v1", middleware.JWTAuthentication(userStore))
-		auth         = app.Group("api")
+		hotelHandler   = api.NewHotelHandler(store)
+		userHandler    = api.NewUserHandler(userStore)
+		authHandler    = api.NewAuthHandler(userStore)
+		roomHandler    = api.NewRoomHandler(store)
+		bookingHandler = api.NewBookingHandler(store)
+		apiv1          = app.Group("api/v1", middleware.JWTAuthentication(userStore))
+		admin          = apiv1.Group("/api/vi/admin", middleware.AdminAuth)
+		auth           = app.Group("api")
 	)
 	// auth handler
 	auth.Post("/auth", authHandler.HandleAuthenticate)
@@ -57,12 +59,18 @@ func main() {
 	apiv1.Post("/user", userHandler.HandlePostUser)
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
-	// hoterl handlers
+	// hotel handlers
 	apiv1.Get("/hotel", hotelHandler.HandleGetHotels)
 	apiv1.Get("/hotel/:id", hotelHandler.HandleGetHotel)
 	apiv1.Get("/hotel/:id/rooms", hotelHandler.HandleGetRooms)
+	// room handlers
 	apiv1.Post("/room", roomHandler.HandleGetRooms)
 	apiv1.Post("/room/:id/book", roomHandler.HandleBookRoom)
+	// bookings
+	apiv1.Get("/booking/:id", bookingHandler.HandleGetBooking)
+	// admin handlers
+	admin.Get("/booking", bookingHandler.HandleGetBookings)
+
 	app.Listen(*listenAddr)
 
 }
