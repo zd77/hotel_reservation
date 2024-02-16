@@ -48,7 +48,7 @@ func main() {
 		roomHandler    = api.NewRoomHandler(store)
 		bookingHandler = api.NewBookingHandler(store)
 		apiv1          = app.Group("api/v1", middleware.JWTAuthentication(userStore))
-		admin          = apiv1.Group("/api/vi/admin", middleware.AdminAuth)
+		admin          = apiv1.Group("/admin", middleware.AdminAuth)
 		auth           = app.Group("api")
 	)
 	// auth handler
@@ -66,8 +66,9 @@ func main() {
 	// room handlers
 	apiv1.Post("/room", roomHandler.HandleGetRooms)
 	apiv1.Post("/room/:id/book", roomHandler.HandleBookRoom)
-	// bookings
+	// bookings handlers
 	apiv1.Get("/booking/:id", bookingHandler.HandleGetBooking)
+	apiv1.Get("/booking/:id/cancel", bookingHandler.HandleCancelBooking)
 	// admin handlers
 	admin.Get("/booking", bookingHandler.HandleGetBookings)
 
