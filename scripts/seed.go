@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/zd77/hotel_reservation/api"
@@ -99,11 +100,13 @@ func main() {
 
 func init() {
 	var err error
-	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DBURI))
+	mongoEndpoint := os.Getenv("MONGO_DB_URL")
+	mongoDbName := os.Getenv("MONGO_DB_NAME")
+	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoEndpoint))
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := client.Database(db.DBNAME).Drop(ctx); err != nil {
+	if err := client.Database(mongoDbName).Drop(ctx); err != nil {
 		log.Fatal(err)
 	}
 	hotelStore = db.NewMongoHotelStore(client)
